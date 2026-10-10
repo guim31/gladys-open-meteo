@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-10
+
 ### Added
 
 - Open-Meteo weather provider for Gladys 5.1 or later (`type: "weather"`): no
@@ -31,4 +33,5 @@ the notes of the version's GitHub Release.
 - Documentation in English and French, with the Open-Meteo attribution (CC BY
   4.0).
 
-[Unreleased]: https://github.com/guim31/gladys-open-meteo/commits/main
+[Unreleased]: https://github.com/guim31/gladys-open-meteo/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/guim31/gladys-open-meteo/releases/tag/v1.0.1

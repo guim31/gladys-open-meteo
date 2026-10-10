@@ -1,6 +1,6 @@
 {
   "name": "gladys-open-meteo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Open-Meteo weather provider for Gladys Assistant: free worldwide forecasts, no API key.",
   "type": "module",
