@@ -1,59 +1,165 @@
-# Demo Devices Template
+# Open-Meteo
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+Weather for Gladys from [Open-Meteo](https://open-meteo.com/), the free and
+open weather API built on the forecasts of the national weather services
+(Météo-France, DWD, NOAA, ECMWF, Met Office, Environment Canada, MET Norway,
+MeteoSwiss…): current conditions, the next 24 hours, the next 8 days, and the
+rain of the next hour quarter by quarter.
+
+It works anywhere in the world, with **no account and no API key**.
+
+Weather data by [Open-Meteo.com](https://open-meteo.com/), under the
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) licence. This
+integration is a community project, not affiliated with Open-Meteo.
 
 ## What you get
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+- **The Gladys weather widget and the chat assistant** use Open-Meteo: the
+  weather now (temperature, feels-like, humidity, pressure, dew point, wind
+  and gusts, visibility, cloud cover, UV index, sunrise and sunset), the next
+  24 hours (with the chance of rain) and the next 8 days. Day and night are
+  told apart, so the night gets its own icons. Everything is shown in **°F, mph
+  and inches** or **°C, m/s and mm**, following the unit system of each Gladys
+  user.
+- **Scene trigger "Rain or snow expected within the hour"**: fires when the
+  quarter-hour forecast starts showing precipitation within the hour.
+- **Scene action "Get the precipitation of the next hour"**: tells a scene
+  whether rain or snow is coming, when, and how strong — to close the awning
+  or skip the sprinklers.
+- **Dashboard widget "Precipitation, next 2 hours"**: the quarter-hour chart
+  of the rain and snow to come.
+
+**No weather alerts.** Open-Meteo does not publish the official warnings of
+the weather services (vigilance, storm or heat warnings): the built-in
+"Weather alert" trigger of Gladys stays silent with it. For alerts, install
+the **Météo France** integration (vigilance, France) or **Pirate Weather**
+(United States, Canada, Europe) next to this one.
+
+## Installation
+
+1. In Gladys, check that your house has a location: **Settings → Houses**,
+   then set the address or the position on the map. The integration refreshes
+   the weather of every house that has one.
+2. Install **Open-Meteo** from the integration catalog. Gladys asks you to
+   allow access to the location of your houses: it is needed to fetch their
+   weather.
+3. Open the **Configuration** tab and click **Test Open-Meteo**. The answer
+   shows the current temperature at your house.
+
+That's it: the weather widget of your dashboard now shows Open-Meteo. If
+another weather integration is installed, you can choose the provider in the
+settings of the weather widget.
 
 ## Configuration
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+- **Refresh interval** — every 15 minutes (recommended), 30 minutes or hour.
+- **Weather model** — leave **Automatic**: Open-Meteo then combines the best
+  models for your location (the national high-resolution model where there
+  is one, such as Météo-France AROME in France, then global models). Pick a model only to follow one
+  weather service: Météo-France (AROME, ARPEGE), DWD ICON (Germany), NOAA GFS
+  and HRRR (United States), ECMWF IFS, UK Met Office, Environment Canada GEM,
+  MET Norway (Nordic countries), MeteoSwiss ICON. Outside their region, the
+  regional models fall back to a global one. Some models lack a value
+  (visibility, UV index, chance of rain…): it is then simply not shown. If a
+  model has no forecast at all for your house, the integration says so in the
+  Configuration screen: choose Automatic.
+- **Language of the scene texts** — the language of the sentences the
+  integration writes in scene variables ("Moderate rain expected in 23 minutes
+  (85% chance)."). **Automatic** follows the language of your Gladys.
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+## How often the weather is refreshed
 
-## Actions
+A timer in the integration refreshes every house with a location, every 15
+minutes by default. Each refresh is **one call per house** (houses closer than
+about 100 m share it), and that single call feeds everything: the dashboard,
+the chat, the scenes and the widget. Opening the dashboard costs nothing:
+Gladys is served from the forecast in memory.
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+The free Open-Meteo API allows 10,000 calls a day per Internet connection.
+Open-Meteo counts a request with many variables as several calls: about four
+here, so a house refreshed every 15 minutes uses some 420 calls a day. The
+limit is shared by every application on your connection; if it is reached,
+the integration waits and keeps showing the last forecast for up to 3 hours.
 
 ## Scenes
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+### Rain or snow expected within the hour
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+Fires once when the quarter-hour forecast shows precipitation within the hour
+where the previous refresh showed none. Filters: the house (its name, exactly
+as in Gladys; empty for any house), the kind of precipitation (rain, snow,
+freezing rain) and the strongest intensity expected (light, moderate, heavy).
+
+Variables for the following actions: the house, the precipitation, the
+intensity, the minutes until it starts, the probability (when the model gives
+one), and a ready-made sentence — for example "Moderate rain expected in 23
+minutes (85% chance)."
+
+A quarter of an hour counts as wet from 0.1 mm (0.004 in) of water. Light is
+under 2.5 mm/h (0.1 in/h), heavy above 7.6 mm/h (0.3 in/h). The trigger does
+not fire twice for the same house within 45 minutes, and never on the first
+refresh after a restart.
+
+Example: _Rain or snow expected within the hour, house Home, rain, moderate or
+heavy_ → close the roof window and send a message with the sentence.
+
+### Get the precipitation of the next hour
+
+A scene action that reads the quarter-hour forecast of a house (empty: your
+first house) and returns whether precipitation is expected, in how many
+minutes, its kind, intensity and probability, and a sentence. Use a condition
+on _Precipitation expected_ to decide what comes next. It costs no call.
 
 ## Dashboard
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+- The **Weather** widget of Gladys shows Open-Meteo as soon as the integration
+  is installed.
+- The **Precipitation, next 2 hours** widget, added to a dashboard like any
+  widget, draws the next two hours quarter by quarter, in in/h or mm/h. Leave
+  the "House" setting empty for your first house, or type the name of another
+  one.
+
+## Limits
+
+- **No official alerts** (see above).
+- **The quarter-hour forecast is model data, not radar.** Some models run
+  natively every 15 minutes over parts of Europe and North America (NOAA
+  HRRR in the United States); elsewhere it is interpolated from hourly
+  models. It is
+  refreshed every 15 minutes at best: a shower that pops up between two
+  refreshes is announced by the next one.
+- **Chance of rain**: Open-Meteo derives it from ensemble models, by the hour
+  and the day; some models and places have none.
+- **Houses are matched by name** in the scene and widget fields: type the name
+  exactly as shown in Gladys.
+- **Non-commercial use only**, as the free Open-Meteo API requires.
+- The integration needs Gladys 5.1 or later.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **"No house of Gladys has a location"** — set the location of your house in
+  **Settings → Houses**.
+- **"Open-Meteo has no forecast for your house with this weather model"** —
+  the chosen model does not cover your house: choose **Automatic**.
+- **"Open-Meteo request limit reached"** — another application on your
+  Internet connection uses the same free API heavily. The integration retries
+  after an hour (a minute for the per-minute limit); choose a longer refresh
+  interval if it happens often.
+- **"Open-Meteo is unreachable"** — Gladys cannot reach `api.open-meteo.com`:
+  check its Internet access. The integration retries every 5 minutes.
+- **The dashboard still shows another provider** — open the settings of the
+  weather widget and choose Open-Meteo.
+- **Logs**: the **Logs** tab of the integration shows each refresh ("Refreshed
+  1 location(s) of 1 house(s); next refresh in 15 min").
+
+## Privacy
+
+The coordinates of your houses are sent to Open-Meteo to get their forecast,
+and nowhere else. No account, no key, nothing stored on disk.
+
+## Credits
+
+Weather data by [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0), from
+the models of Météo-France, DWD, NOAA, ECMWF, the Met Office, Environment
+Canada, MET Norway, MeteoSwiss and other national weather services. Thank you
+to Open-Meteo for keeping a free API open to everyone.
