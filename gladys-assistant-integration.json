@@ -1,177 +1,326 @@
 {
   "manifest_version": 1,
-  "type": "device",
-  "name": "Demo Devices Template",
+  "type": "weather",
+  "name": "Open-Meteo",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Free worldwide forecasts from the national weather models, no account or API key needed.",
+    "fr": "Prévisions mondiales gratuites des modèles météo nationaux, sans compte ni clé d'API."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-open-meteo:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-open-meteo/main/cover.png",
+  "categories": ["environment"],
+  "transports": ["cloud"],
+  "location": true,
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": { "en": "Nothing to sign up for", "fr": "Aucune inscription" },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Open-Meteo is free for non-commercial use and needs no API key. The integration refreshes the weather of every house that has a location in Gladys. Weather data by Open-Meteo.com (CC BY 4.0); this integration is not affiliated with Open-Meteo.",
+        "fr": "Open-Meteo est gratuit pour un usage non commercial et ne demande aucune clé d'API. L'intégration met à jour la météo de chaque maison qui a une position dans Gladys. Weather data by Open-Meteo.com (CC BY 4.0) ; cette intégration n'est pas affiliée à Open-Meteo."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://open-meteo.com/",
+          "label": { "en": "About Open-Meteo", "fr": "À propos d'Open-Meteo" }
+        },
+        {
+          "url": "https://open-meteo.com/en/terms",
+          "label": { "en": "Terms of use", "fr": "Conditions d'utilisation" }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "refresh_interval",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "label": { "en": "Refresh interval", "fr": "Fréquence de mise à jour" },
+      "description": {
+        "en": "Each refresh costs one call per house. Every 15 minutes keeps the rain forecast of the next hour up to date.",
+        "fr": "Chaque mise à jour coûte un appel par maison. Toutes les 15 minutes garde à jour la prévision de pluie de l'heure à venir."
+      },
       "required": false,
-      "default": "celsius",
+      "default": "15",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "15",
+          "label": {
+            "en": "Every 15 minutes (recommended)",
+            "fr": "Toutes les 15 minutes (recommandé)"
+          }
+        },
+        { "value": "30", "label": { "en": "Every 30 minutes", "fr": "Toutes les 30 minutes" } },
+        { "value": "60", "label": { "en": "Every hour", "fr": "Toutes les heures" } }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "model",
+      "type": "select",
+      "label": { "en": "Weather model", "fr": "Modèle météo" },
       "description": {
-        "en": "How often sensors are polled, in seconds.",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes."
+        "en": "Automatic combines the best models for your location. Pick a model only to follow a given weather service.",
+        "fr": "Automatique combine les meilleurs modèles pour votre position. Choisissez un modèle seulement pour suivre un service météo précis."
       },
       "required": false,
-      "default": 300,
-      "min": 30,
-      "max": 3600
+      "default": "best_match",
+      "options": [
+        {
+          "value": "best_match",
+          "label": { "en": "Automatic (recommended)", "fr": "Automatique (recommandé)" }
+        },
+        {
+          "value": "meteofrance_seamless",
+          "label": {
+            "en": "Météo-France (AROME, ARPEGE)",
+            "fr": "Météo-France (AROME, ARPEGE)"
+          }
+        },
+        {
+          "value": "icon_seamless",
+          "label": { "en": "DWD ICON (Germany)", "fr": "DWD ICON (Allemagne)" }
+        },
+        {
+          "value": "gfs_seamless",
+          "label": { "en": "NOAA GFS and HRRR (USA)", "fr": "NOAA GFS et HRRR (États-Unis)" }
+        },
+        {
+          "value": "ecmwf_ifs025",
+          "label": { "en": "ECMWF IFS (Europe)", "fr": "ECMWF IFS (Europe)" }
+        },
+        {
+          "value": "ukmo_seamless",
+          "label": { "en": "UK Met Office", "fr": "Met Office (Royaume-Uni)" }
+        },
+        {
+          "value": "gem_seamless",
+          "label": { "en": "Environment Canada GEM", "fr": "Environnement Canada GEM" }
+        },
+        {
+          "value": "metno_seamless",
+          "label": { "en": "MET Norway (Nordic)", "fr": "MET Norway (pays nordiques)" }
+        },
+        {
+          "value": "meteoswiss_icon_seamless",
+          "label": { "en": "MeteoSwiss ICON", "fr": "MétéoSuisse ICON" }
+        }
+      ]
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": { "en": "Language of the scene texts", "fr": "Langue des textes de scène" },
+      "description": {
+        "en": "Language of the sentences the integration puts in scene variables. Automatic follows the language of your Gladys.",
+        "fr": "Langue des phrases que l'intégration met dans les variables de scène. Automatique suit la langue de votre Gladys."
+      },
+      "required": false,
+      "default": "auto",
+      "options": [
+        { "value": "auto", "label": { "en": "Automatic", "fr": "Automatique" } },
+        { "value": "en", "label": { "en": "English", "fr": "Anglais" } },
+        { "value": "fr", "label": { "en": "French", "fr": "Français" } }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "test_connection",
+      "label": { "en": "Test Open-Meteo", "fr": "Tester Open-Meteo" },
+      "description": {
+        "en": "Fetches the weather of your first house now and shows its current temperature.",
+        "fr": "Récupère la météo de votre première maison maintenant et affiche sa température actuelle."
+      },
+      "timeout_seconds": 20
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "precipitation_expected",
+      "label": {
+        "en": "Rain or snow expected within the hour",
+        "fr": "Pluie ou neige attendue dans l'heure"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "The 15-minute forecast now shows precipitation within the hour, where the previous refresh showed none.",
+        "fr": "La prévision au quart d'heure annonce des précipitations dans l'heure, là où la mise à jour précédente n'en annonçait pas."
       },
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "key": "house",
+          "type": "string",
+          "label": { "en": "House", "fr": "Maison" },
+          "description": {
+            "en": "Name of the house, exactly as shown in Gladys. Leave empty for every house.",
+            "fr": "Nom de la maison, exactement comme dans Gladys. Laissez vide pour toutes les maisons."
+          },
+          "required": false
         },
         {
-          "key": "target",
+          "key": "precipitation_type",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": { "en": "Precipitation", "fr": "Précipitations" },
+          "description": {
+            "en": "Leave empty for any precipitation.",
+            "fr": "Laissez vide pour toutes les précipitations."
+          },
+          "required": false,
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            { "value": "rain", "label": { "en": "Rain", "fr": "Pluie" } },
+            { "value": "snow", "label": { "en": "Snow", "fr": "Neige" } },
+            {
+              "value": "freezing_rain",
+              "label": { "en": "Freezing rain", "fr": "Pluie verglaçante" }
+            }
+          ]
+        },
+        {
+          "key": "intensity",
+          "type": "multi_select",
+          "label": { "en": "Intensity", "fr": "Intensité" },
+          "description": {
+            "en": "Strongest intensity expected. Leave empty for any intensity.",
+            "fr": "Intensité la plus forte attendue. Laissez vide pour toute intensité."
+          },
+          "required": false,
+          "options": [
+            { "value": "light", "label": { "en": "Light", "fr": "Faible" } },
+            { "value": "moderate", "label": { "en": "Moderate", "fr": "Modérée" } },
+            { "value": "heavy", "label": { "en": "Heavy", "fr": "Forte" } }
           ]
         }
       ],
       "variables": [
+        { "key": "house", "type": "string", "label": { "en": "House", "fr": "Maison" } },
         {
-          "key": "target",
+          "key": "precipitation_type",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Precipitation (rain, snow, freezing_rain)",
+            "fr": "Précipitations (rain, snow, freezing_rain)"
+          }
+        },
+        {
+          "key": "intensity",
+          "type": "string",
+          "label": {
+            "en": "Intensity (light, moderate, heavy)",
+            "fr": "Intensité (light, moderate, heavy)"
+          }
+        },
+        {
+          "key": "minutes_until",
+          "type": "number",
+          "label": { "en": "Minutes until it starts", "fr": "Minutes avant le début" }
+        },
+        {
+          "key": "probability",
+          "type": "number",
+          "label": { "en": "Probability (%)", "fr": "Probabilité (%)" }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": { "en": "Summary", "fr": "Résumé" },
+          "description": {
+            "en": "A sentence ready to put in a message.",
+            "fr": "Une phrase prête à mettre dans un message."
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "get_precipitation_next_hour",
+      "label": {
+        "en": "Get the precipitation of the next hour",
+        "fr": "Obtenir les précipitations de l'heure à venir"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Reads the 15-minute forecast of a house, to act if rain or snow is coming.",
+        "fr": "Lit la prévision au quart d'heure d'une maison, pour agir si de la pluie ou de la neige arrive."
+      },
+      "timeout_seconds": 20,
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "key": "house",
+          "type": "string",
+          "label": { "en": "House", "fr": "Maison" },
+          "description": {
+            "en": "Name of the house, exactly as shown in Gladys. Leave empty for your first house.",
+            "fr": "Nom de la maison, exactement comme dans Gladys. Laissez vide pour votre première maison."
+          },
+          "required": false
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
+          "key": "available",
           "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "label": { "en": "Forecast available", "fr": "Prévision disponible" }
+        },
+        {
+          "key": "precipitation_expected",
+          "type": "boolean",
+          "label": { "en": "Precipitation expected", "fr": "Précipitations attendues" }
+        },
+        {
+          "key": "minutes_until",
+          "type": "number",
+          "label": { "en": "Minutes until it starts", "fr": "Minutes avant le début" }
+        },
+        {
+          "key": "precipitation_type",
+          "type": "string",
+          "label": {
+            "en": "Precipitation (rain, snow, freezing_rain)",
+            "fr": "Précipitations (rain, snow, freezing_rain)"
+          }
+        },
+        {
+          "key": "intensity",
+          "type": "string",
+          "label": {
+            "en": "Intensity (light, moderate, heavy)",
+            "fr": "Intensité (light, moderate, heavy)"
+          }
+        },
+        {
+          "key": "probability",
+          "type": "number",
+          "label": { "en": "Probability (%)", "fr": "Probabilité (%)" }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": { "en": "Summary", "fr": "Résumé" }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
+      "key": "precipitation_next_hours",
+      "label": { "en": "Precipitation, next 2 hours", "fr": "Pluie des 2 prochaines heures" },
       "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+        "en": "Quarter-hour rain and snow chart for the next two hours.",
+        "fr": "Graphique au quart d'heure de la pluie et de la neige des deux prochaines heures."
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "icon": "cloud-rain",
+      "settings": [
+        {
+          "key": "house",
+          "type": "string",
+          "label": { "en": "House", "fr": "Maison" },
+          "description": {
+            "en": "Name of the house, exactly as shown in Gladys. Leave empty for your first house.",
+            "fr": "Nom de la maison, exactement comme dans Gladys. Laissez vide pour votre première maison."
+          },
+          "required": false
+        }
+      ]
     }
   ]
 }

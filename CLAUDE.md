@@ -16,8 +16,8 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/pivot.test.js            # one file
+node --test --test-name-pattern "trigger" # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -31,16 +31,22 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+index.js                          SDK wiring only: createApp(gladys) and the shutdown
+src/app.js                        the handlers (weather, scene action, widget, action, config)
+src/api.js                        the one Open-Meteo request (variables, units), error kinds
+src/forecast.js                   response columns → slim metric rows (unixtime or ISO + offset)
+src/forecast-store.js             cache per location, shared calls, stale fallback, 429 block
+src/scheduler.js                  the refresh timer (one call per location per cycle)
+src/pivot.js                      slim forecast → pivot weather of the core, in the asked units
+src/conditions.js                 WMO codes → Gladys conditions, day/night
+src/nowcast.js                    the next hour from `minutely_15`
+src/scene-triggers.js, scene-actions.js, widget.js   the Gladys 5.1 capabilities
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
+gladys-assistant-integration.json manifest: type weather, location, config_schema, capabilities
 docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test; test/helpers/fakeGladys.js stands in for the SDK
+test/                             node --test; test/helpers/fake-gladys.js stands in for the SDK
+test/fixtures/README.md           which fixtures are real and which are synthetic
+scripts/capture-fixture.mjs       records a real response as a fixture (no key needed)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -167,6 +173,59 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Les filtres de scène ne font qu'égalité et appartenance : un seuil reste le travail d'un capteur.
 - **Les clés de widgets, de déclencheurs et d'actions sont figées une fois publiées.**
 - `gladys_version` `>=5.1.0` dès qu'il y a widgets, déclencheurs ou actions de scène.
+
+**Type `weather` (contrat B.18, vérifié dans le code du cœur et le SDK 0.14)**
+
+- `normalizeWeather` (cœur) garde une liste blanche de champs : pas de `visibility` ni de
+  `dew_point` dans `hours`, pas d'`apparent_temperature` dans `days` (jetés en silence). Les
+  pourcentages sont 0–100 (bornés), `is_day` doit être un booléen strict, `units` vaut `metric` ou
+  `us` en entrée et le cœur estampille lui-même `units` dans la réponse. `night` est déprécié :
+  condition réelle + `is_day`. `test/pivot.test.js` recopie ces listes blanches.
+- Le cœur tronque `alerts` à 10 **avant** de les valider : trier soi-même par sévérité. Une
+  intégration sans alertes officielles n'envoie **pas** de champ `alerts` et n'appelle jamais
+  `requestWeatherRefresh()` (qui ne sert qu'au déclencheur d'alertes du cœur).
+- `requestWeatherRefresh()` et `requestWidgetRefresh()` sont **synchrones** (fire-and-forget),
+  le second lève une exception sur une clé de widget mal formée.
+- Le SDK 0.14 publié n'a **pas** l'export `@gladysassistant/integration-sdk/testing` que décrit
+  le README de `master` : faux client maison dans `test/helpers/`.
+- `source: "houses"` (sélecteur de maison) n'existe que sur `master` du cœur, dans aucune version
+  publiée jusqu'à 5.1.4 : désigner la maison par un champ `string` (son nom). `getHouses()` exige
+  `location: true` ; une intégration météo n'en a besoin que pour surveiller elle-même la
+  prévision (déclencheur), le cœur envoyant les coordonnées dans chaque `onWeatherGet`.
+
+**Open-Meteo**
+
+- L'hôte `api.open-meteo.com` est **refusé par le proxy** des sessions de code : aucune vraie
+  réponse n'est capturable ici. Fixtures réelles reprises de `python-open-meteo` (MIT) et de
+  Home Assistant (Apache-2.0), les autres synthétiques (voir `test/fixtures/README.md`) ;
+  `scripts/capture-fixture.mjs` enregistre une vraie réponse ailleurs, sans clé. Vérifié contre
+  l'API réelle par l'orchestrateur le 10 octobre 2026 (Toulouse, New York, Sydney).
+- Une variable mal orthographiée fait refuser **toute** la requête (HTTP 400, `reason`) :
+  `test/api.test.js` vérifie chaque variable demandée contre une vraie réponse.
+- `precipitation` de `minutely_15` (comme de `hourly`) est la somme des 15 minutes (de l'heure)
+  **précédentes** : le pas daté 14:15 couvre 14:00–14:15. `forecast_minutely_15=N` commence au pas
+  **courant**, donc N−1 pas à venir seulement.
+- Même chose pour `precipitation` et `precipitation_probability` **horaires** : la ligne datée
+  15:00 porte l'heure 14:00–15:00. Une heure du pivot commence à son `datetime` : elle lit donc
+  ces deux valeurs sur la ligne **suivante** (`src/pivot.js`, figé par `test/pivot.test.js`).
+- `timeformat=unixtime` : toutes les heures sont des instants (pas de piège d'heure d'été) ; avec
+  `timezone=auto`, le `time` d'un jour est le minuit **local** du lieu. Sans `unixtime`, les heures
+  sont locales, à corriger de `utc_offset_seconds`.
+- Un modèle unique (`models=icon_seamless`) rend des clés sans suffixe ; plusieurs modèles
+  suffixent chaque variable. Un modèle régional hors de sa zone, ou une variable que le modèle n'a
+  pas, rend des `null` : à traiter partout comme « inconnu », jamais comme 0.
+- `precipitation_probability` vient des modèles d'ensemble, à l'heure et au jour seulement (pas
+  au quart d'heure), et manque pour certains modèles.
+- Open-Meteo compte une requête de plus de 10 variables comme plusieurs appels (limite gratuite :
+  10 000/jour, 5 000/heure, 600/minute par IP, partagée par toute la connexion). Un 429 dit dans
+  son `reason` quelle limite est atteinte.
+- Attribution exigée par la licence CC BY 4.0 : « Weather data by Open-Meteo.com », dans la
+  config, la doc et le README (`test/manifest.test.js` la vérifie dans la config).
+
+**Session de code**
+
+- Copier en bloc des fichiers d'un dépôt cloné (`cp` depuis un clone de référence) est refusé
+  par le garde-fou de la session : lire la référence, puis réécrire les fichiers.
 
 ## Store
 

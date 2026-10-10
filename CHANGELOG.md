@@ -12,28 +12,23 @@ the notes of the version's GitHub Release.
 
 ### Added
 
-- A working example of scene triggers, scene actions and dashboard widgets
-  (Gladys 5.1.0 or later).
-- `CHANGELOG.md`, rolled by the Release workflow.
-- A GitHub Release for every version, with its changelog section as notes: the
-  Gladys Supervision page links each version to the repository's releases.
-- CI runs the tests on Node 22 and 24, and builds the Docker image.
-- Dependabot keeps the npm dependencies and the GitHub Actions up to date.
-- `SECURITY.md` (how to report a vulnerability) and `CLAUDE.md` (project rules
-  for contributors and coding assistants).
-- Manifest tests: `version` matches `package.json`, `docker_image` is tagged
-  with it, descriptions hold 10 to 100 characters, placeholders are
-  multi-language objects.
-- The latitude and longitude fields show an example value as placeholder.
+- Open-Meteo weather provider for Gladys 5.1 or later (`type: "weather"`): no
+  account, no API key. Current conditions, the next 24 hours and the next 8
+  days in the Gladys weather widget and chat assistant, in °C/m/s/mm or
+  °F/mph/in after each user's unit system, with feels-like temperature, wind
+  and gusts, UV index, sunrise and sunset, precipitation and its probability.
+- WMO weather codes mapped to the Gladys conditions, freezing rain, freezing
+  fog and thundersnow included, with the day/night flag of the API.
+- Scene trigger "Rain or snow expected within the hour" and scene action "Get
+  the precipitation of the next hour", from the 15-minute forecast.
+- Dashboard widget "Precipitation, next 2 hours": the quarter-hour chart.
+- Choice of the weather model: automatic, Météo-France, DWD ICON, NOAA
+  GFS/HRRR, ECMWF IFS, UK Met Office, Environment Canada GEM, MET Norway or
+  MeteoSwiss.
+- One call per house every 15 minutes (or 30, or 60), served from memory to
+  every reader; a forecast up to 3 hours old is kept when Open-Meteo fails.
+- "Test Open-Meteo" button in the Configuration screen.
+- Documentation in English and French, with the Open-Meteo attribution (CC BY
+  4.0).
 
-### Changed
-
-- Node.js 22 or later is required (Node 20 is end-of-life).
-
-### Fixed
-
-- The release commit no longer fails `npm run format:check`: the Release
-  workflow updates the manifest `version` and `docker_image` in place instead
-  of re-printing the whole file with `jq`.
-
-[Unreleased]: https://github.com/GladysAssistant/integration-template-js/commits/main
+[Unreleased]: https://github.com/guim31/gladys-open-meteo/commits/main

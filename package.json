@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-open-meteo",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "Open-Meteo weather provider for Gladys Assistant: free worldwide forecasts, no API key.",
   "type": "module",
   "main": "index.js",
   "scripts": {

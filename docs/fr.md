@@ -1,65 +1,182 @@
-# Template de démonstration
+# Open-Meteo
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+La météo dans Gladys avec [Open-Meteo](https://open-meteo.com/), l'API météo
+libre et gratuite construite sur les prévisions des services météo nationaux
+(Météo-France, DWD, NOAA, ECMWF, Met Office, Environnement Canada, MET Norway,
+MétéoSuisse…) : conditions actuelles, les 24 prochaines heures, les 8
+prochains jours, et la pluie de l'heure à venir, quart d'heure par quart
+d'heure.
+
+Elle fonctionne partout dans le monde, **sans compte ni clé d'API**.
+
+Weather data by [Open-Meteo.com](https://open-meteo.com/) (données météo
+d'Open-Meteo.com), sous licence
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.fr). Cette
+intégration est un projet communautaire, non affilié à Open-Meteo.
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- **Le widget météo de Gladys et l'assistant de chat** utilisent Open-Meteo :
+  la météo actuelle (température, ressenti, humidité, pression, point de
+  rosée, vent et rafales, visibilité, couverture nuageuse, indice UV, lever et
+  coucher du soleil), les 24 prochaines heures (avec la probabilité de pluie)
+  et les 8 prochains jours. Le jour et la nuit sont distingués : la nuit a
+  ses propres icônes. Tout est affiché en **°C, m/s et mm** ou en **°F,
+  mph et pouces**, selon le système d'unités de chaque utilisateur de Gladys.
+- **Déclencheur de scène « Pluie ou neige attendue dans l'heure »** : se
+  déclenche quand la prévision au quart d'heure commence à annoncer des
+  précipitations dans l'heure.
+- **Action de scène « Obtenir les précipitations de l'heure à venir »** :
+  indique à une scène si de la pluie ou de la neige arrive, quand, et avec
+  quelle intensité — pour fermer le store ou sauter l'arrosage.
+- **Widget « Pluie des 2 prochaines heures »** : le graphique au quart d'heure
+  de la pluie et de la neige à venir.
+
+**Pas d'alertes météo.** Open-Meteo ne publie pas les avertissements officiels
+des services météo (vigilance, alertes tempête ou canicule) : le déclencheur
+intégré « Alerte météo » de Gladys reste muet avec elle. Pour les alertes,
+installez à côté l'intégration **Météo France** (vigilance, France) ou
+**Pirate Weather** (États-Unis, Canada, Europe).
+
+## Installation
+
+1. Dans Gladys, vérifiez que votre maison a une position : **Paramètres →
+   Maisons**, puis renseignez l'adresse ou la position sur la carte.
+   L'intégration met à jour la météo de chaque maison qui en a une.
+2. Installez **Open-Meteo** depuis le catalogue des intégrations. Gladys vous
+   demande d'autoriser l'accès à la position de vos maisons : il est
+   nécessaire pour récupérer leur météo.
+3. Ouvrez l'onglet **Configuration** et cliquez sur **Tester Open-Meteo**. La
+   réponse affiche la température actuelle de votre maison.
+
+C'est tout : le widget météo de votre tableau de bord affiche désormais
+Open-Meteo. Si une autre intégration météo est installée, vous pouvez choisir
+le fournisseur dans les réglages du widget météo.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+- **Fréquence de mise à jour** — toutes les 15 minutes (recommandé), 30
+  minutes ou toutes les heures.
+- **Modèle météo** — laissez **Automatique** : Open-Meteo combine alors les
+  meilleurs modèles pour votre position (le modèle national à haute
+  résolution quand il y en a un, comme AROME de Météo-France en France, puis
+  des modèles mondiaux). Choisissez
+  un modèle seulement pour suivre un service météo : Météo-France (AROME,
+  ARPEGE), DWD ICON (Allemagne), NOAA GFS et HRRR (États-Unis), ECMWF IFS, Met
+  Office (Royaume-Uni), Environnement Canada GEM, MET Norway (pays nordiques),
+  MétéoSuisse ICON. Hors de leur région, les modèles régionaux se rabattent
+  sur un modèle mondial. Certains modèles n'ont pas toutes les valeurs
+  (visibilité, indice UV, probabilité de pluie…) : elles ne sont alors
+  simplement pas affichées. Si un modèle n'a aucune prévision pour votre
+  maison, l'intégration le signale dans l'écran Configuration : choisissez
+  Automatique.
+- **Langue des textes de scène** — la langue des phrases que l'intégration
+  écrit dans les variables de scène (« Pluie modérée attendue dans 23 minutes
+  (probabilité 85 %). »). **Automatique** suit la langue de votre Gladys.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+## Fréquence de mise à jour de la météo
 
-## Actions
+Un minuteur dans l'intégration met à jour chaque maison qui a une position,
+toutes les 15 minutes par défaut. Chaque mise à jour coûte **un appel par
+maison** (les maisons à moins de 100 m environ le partagent), et cet appel
+unique alimente tout : le tableau de bord, le chat, les scènes et le widget.
+Ouvrir le tableau de bord ne coûte rien : Gladys est servi depuis la prévision
+en mémoire.
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+L'API gratuite d'Open-Meteo autorise 10 000 appels par jour et par connexion
+Internet. Open-Meteo compte une requête de nombreuses variables comme
+plusieurs appels : environ quatre ici, soit quelque 420 appels par jour pour
+une maison mise à jour toutes les 15 minutes. La limite est partagée par
+toutes les applications de votre connexion ; si elle est atteinte,
+l'intégration patiente et continue d'afficher la dernière prévision pendant 3
+heures au plus.
 
 ## Scènes
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+### Pluie ou neige attendue dans l'heure
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+Se déclenche une fois quand la prévision au quart d'heure annonce des
+précipitations dans l'heure, là où la mise à jour précédente n'en annonçait
+pas. Filtres : la maison (son nom, exactement comme dans Gladys ; vide pour
+toutes les maisons), le type de précipitations (pluie, neige, pluie
+verglaçante) et l'intensité la plus forte attendue (faible, modérée, forte).
+
+Variables pour les actions suivantes : la maison, les précipitations,
+l'intensité, les minutes avant le début, la probabilité (quand le modèle en
+donne une), et une phrase toute prête — par exemple « Pluie modérée attendue
+dans 23 minutes (probabilité 85 %). »
+
+Un quart d'heure compte comme pluvieux à partir de 0,1 mm d'eau. L'intensité
+est faible sous 2,5 mm/h, forte au-delà de 7,6 mm/h. Le déclencheur ne se
+déclenche pas deux fois pour la même maison en moins de 45 minutes, ni jamais
+à la première mise à jour après un redémarrage.
+
+Exemple : _Pluie ou neige attendue dans l'heure, maison Maison, pluie,
+modérée ou forte_ → fermer le velux et envoyer un message avec la phrase.
+
+### Obtenir les précipitations de l'heure à venir
+
+Une action de scène qui lit la prévision au quart d'heure d'une maison (vide :
+votre première maison) et renvoie si des précipitations sont attendues, dans
+combien de minutes, leur type, leur intensité et leur probabilité, ainsi
+qu'une phrase. Ajoutez une condition sur _Précipitations attendues_ pour
+décider de la suite. Elle ne coûte aucun appel.
 
 ## Tableau de bord
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+- Le widget **Météo** de Gladys affiche Open-Meteo dès l'installation de
+  l'intégration.
+- Le widget **Pluie des 2 prochaines heures**, ajouté à un tableau de bord
+  comme n'importe quel widget, trace les deux prochaines heures quart d'heure
+  par quart d'heure, en mm/h ou en in/h. Laissez le réglage « Maison » vide
+  pour votre première maison, ou tapez le nom d'une autre.
+
+## Limites
+
+- **Pas d'alertes officielles** (voir plus haut).
+- **La prévision au quart d'heure est une donnée de modèle, pas un radar.**
+  Certains modèles tournent nativement au quart d'heure sur une partie de
+  l'Europe et de l'Amérique du Nord (NOAA HRRR aux États-Unis) ; ailleurs,
+  elle est interpolée depuis des modèles horaires.
+  Elle est mise à jour toutes les 15 minutes au mieux : une averse qui
+  apparaît entre deux mises à jour est annoncée par la suivante.
+- **Probabilité de pluie** : Open-Meteo la tire de modèles d'ensemble, à
+  l'heure et à la journée ; certains modèles et lieux n'en ont pas.
+- **Les maisons sont désignées par leur nom** dans les champs des scènes et
+  du widget : tapez le nom exactement comme dans Gladys.
+- **Usage non commercial uniquement**, comme l'exige l'API gratuite
+  d'Open-Meteo.
+- L'intégration nécessite Gladys 5.1 ou plus récent.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« Aucune maison de Gladys n'a de position »** — renseignez la position de
+  votre maison dans **Paramètres → Maisons**.
+- **« Open-Meteo n'a pas de prévision pour votre maison avec ce modèle
+  météo »** — le modèle choisi ne couvre pas votre maison : choisissez
+  **Automatique**.
+- **« Limite de requêtes Open-Meteo atteinte »** — une autre application de
+  votre connexion Internet utilise beaucoup la même API gratuite.
+  L'intégration réessaie au bout d'une heure (une minute pour la limite par
+  minute) ; choisissez une fréquence plus longue si cela se répète.
+- **« Open-Meteo est injoignable »** — Gladys n'arrive pas à joindre
+  `api.open-meteo.com` : vérifiez son accès à Internet. L'intégration réessaie
+  toutes les 5 minutes.
+- **Le tableau de bord affiche toujours un autre fournisseur** — ouvrez les
+  réglages du widget météo et choisissez Open-Meteo.
+- **Logs** : l'onglet **Logs** de l'intégration montre chaque mise à jour
+  (« Refreshed 1 location(s) of 1 house(s); next refresh in 15 min »).
+
+## Vie privée
+
+Les coordonnées de vos maisons sont envoyées à Open-Meteo pour obtenir leur
+prévision, et nulle part ailleurs. Pas de compte, pas de clé, rien n'est
+enregistré sur le disque.
+
+## Crédits
+
+Weather data by [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0), à
+partir des modèles de Météo-France, du DWD, de la NOAA, du CEPMMT (ECMWF), du
+Met Office, d'Environnement Canada, de MET Norway, de MétéoSuisse et d'autres
+services météo nationaux. Merci à Open-Meteo de garder une API gratuite
+ouverte à tous.
