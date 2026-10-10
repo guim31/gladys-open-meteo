@@ -95,13 +95,21 @@ function buildWeather(forecast, { units, now = Date.now() }) {
     is_day: isDay(current.time, current.isDay, daily),
   });
 
+  // Open-Meteo stamps an hourly sum at the END of its hour: the precipitation
+  // (and its probability) of the row stamped 15:00 fell from 14:00 to 15:00.
+  // A pivot hour is the hour that STARTS at its datetime, so the hour 14:00
+  // reads them from the row stamped 15:00; the last hour, without a next row,
+  // leaves them out rather than showing the previous hour's.
+  const hourlyByTime = new Map(forecast.hourly.map((hour) => [hour.time, hour]));
+
   // The hour under way and the following ones: a forecast served from the
   // cache an hour later must not lead with an hour already past.
   weather.hours = forecast.hourly
     .filter((hour) => hour.time + 3600 > nowSeconds)
     .slice(0, MAX_HOURS)
-    .map((hour) =>
-      compact({
+    .map((hour) => {
+      const ending = hourlyByTime.get(hour.time + 3600);
+      return compact({
         temperature: convert.temperature(hour.temperature),
         weather: toCondition(hour),
         datetime: isoDate(hour.time),
@@ -112,12 +120,12 @@ function buildWeather(forecast, { units, now = Date.now() }) {
         wind_direction: round(hour.windDirection, 0),
         wind_gust: convert.speed(hour.windGust),
         cloud_cover: round(hour.cloudCover, 0),
-        precipitation: convert.precipitation(hour.precipitation),
-        precipitation_probability: round(hour.precipitationProbability, 0),
+        precipitation: convert.precipitation(ending?.precipitation),
+        precipitation_probability: round(ending?.precipitationProbability, 0),
         uv_index: round(hour.uvIndex, 0),
         is_day: isDay(hour.time, hour.isDay, daily),
-      }),
-    );
+      });
+    });
 
   weather.days = daily
     .filter((day) => day.time + 24 * 3600 > nowSeconds)

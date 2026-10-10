@@ -145,7 +145,8 @@ test('Paris, metric: the current conditions, 24 hours from the current one, 8 da
   assert.equal(weather.hours.length, 24);
   assert.equal(weather.hours[0].datetime, '2026-10-10T14:00:00.000Z');
   assert.equal(weather.hours[1].weather, 'rain');
-  assert.equal(weather.hours[1].precipitation_probability, 85);
+  // The rain of 14:00-15:00 is stamped 15:00 by Open-Meteo.
+  assert.equal(weather.hours[0].precipitation_probability, 85);
   assert.equal(weather.days.length, 8);
   // Today, from the local midnight of Paris.
   assert.equal(weather.days[0].datetime, '2026-10-09T22:00:00.000Z');
@@ -180,6 +181,30 @@ test('Queenstown, southern hemisphere: night, snow, freezing fog', () => {
   assert.equal(weather.days[5].weather, 'freezing-rain');
   // Today in New Zealand started at 11:00 UTC the day before... the 10th.
   assert.equal(weather.days[0].datetime, '2026-10-10T11:00:00.000Z');
+});
+
+test('an hour carries the precipitation that falls during it, from the next row', () => {
+  const raw = loadFixture('synthetic-paris-rain-soon.json');
+  // Rows stamped 14:00, 15:00, 16:00: 15:00 holds the sum of 14:00-15:00.
+  raw.hourly.precipitation = raw.hourly.precipitation.map((_, i) => [9, 2.5, 0.4][i] ?? 0);
+  raw.hourly.precipitation_probability = raw.hourly.precipitation_probability.map(
+    (_, i) => [99, 80, 30][i] ?? 0,
+  );
+  const forecast = parseForecast(raw);
+  const weather = buildWeather(forecast, { units: 'metric', now: SYNTHETIC_NOW });
+  assert.equal(weather.hours[0].datetime, '2026-10-10T14:00:00.000Z');
+  assert.equal(weather.hours[0].precipitation, 2.5);
+  assert.equal(weather.hours[0].precipitation_probability, 80);
+  assert.equal(weather.hours[1].precipitation, 0.4);
+  assert.equal(weather.hours[1].precipitation_probability, 30);
+  // The last row has no next one: its hour leaves both out.
+  const last = buildWeather(forecast, {
+    units: 'metric',
+    now: SYNTHETIC_NOW + 30 * 3600 * 1000,
+  }).hours.at(-1);
+  assert.equal(last.datetime, new Date(forecast.hourly.at(-1).time * 1000).toISOString());
+  assert.equal('precipitation' in last, false);
+  assert.equal('precipitation_probability' in last, false);
 });
 
 test('a forecast served late does not lead with past hours or days', () => {

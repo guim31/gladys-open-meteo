@@ -72,10 +72,10 @@ cache holds about 16 KB per location, far below the 256 MB of the sandbox.
   daily only; some models and places have none, and it is then left out.
 - Scene and widget fields name a house by its name: Gladys 5.1 has no house
   picker for them yet.
-- **Not verified against the live API in development**: the coding session
-  could not reach `api.open-meteo.com`. The parser is tested on real responses
-  recorded by other projects and on synthetic ones shaped like the
-  integration's request; see [the fixtures](test/fixtures/README.md).
+- Verified against the live API on 10 October 2026 (Toulouse, New York,
+  Sydney). The automated tests run on real responses recorded by other
+  projects and on synthetic ones shaped like the integration's request; see
+  [the fixtures](test/fixtures/README.md).
 - Non-commercial use only, as the free Open-Meteo API requires.
 
 ## Development

@@ -198,12 +198,16 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - L'hôte `api.open-meteo.com` est **refusé par le proxy** des sessions de code : aucune vraie
   réponse n'est capturable ici. Fixtures réelles reprises de `python-open-meteo` (MIT) et de
   Home Assistant (Apache-2.0), les autres synthétiques (voir `test/fixtures/README.md`) ;
-  `scripts/capture-fixture.mjs` enregistre une vraie réponse ailleurs, sans clé.
+  `scripts/capture-fixture.mjs` enregistre une vraie réponse ailleurs, sans clé. Vérifié contre
+  l'API réelle par l'orchestrateur le 10 octobre 2026 (Toulouse, New York, Sydney).
 - Une variable mal orthographiée fait refuser **toute** la requête (HTTP 400, `reason`) :
   `test/api.test.js` vérifie chaque variable demandée contre une vraie réponse.
 - `precipitation` de `minutely_15` (comme de `hourly`) est la somme des 15 minutes (de l'heure)
   **précédentes** : le pas daté 14:15 couvre 14:00–14:15. `forecast_minutely_15=N` commence au pas
   **courant**, donc N−1 pas à venir seulement.
+- Même chose pour `precipitation` et `precipitation_probability` **horaires** : la ligne datée
+  15:00 porte l'heure 14:00–15:00. Une heure du pivot commence à son `datetime` : elle lit donc
+  ces deux valeurs sur la ligne **suivante** (`src/pivot.js`, figé par `test/pivot.test.js`).
 - `timeformat=unixtime` : toutes les heures sont des instants (pas de piège d'heure d'été) ; avec
   `timezone=auto`, le `time` d'un jour est le minuit **local** du lieu. Sans `unixtime`, les heures
   sont locales, à corriger de `utc_offset_seconds`.
