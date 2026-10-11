@@ -65,7 +65,8 @@ settings of the weather widget.
   Configuration screen: choose Automatic.
 - **Language of the scene texts** — the language of the sentences the
   integration writes in scene variables ("Moderate rain expected in 23 minutes
-  (85% chance)."). **Automatic** follows the language of your Gladys.
+  (85% chance)."): English, French, German or Spanish. **Automatic** follows
+  the language of your Gladys.
 
 ## How often the weather is refreshed
 

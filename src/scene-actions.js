@@ -21,7 +21,7 @@ const SCENE_ACTIONS = Object.freeze({
 /**
  * @description Build the outputs of the action.
  * @param {object} nowcast - A readNowcast() result.
- * @param {string} language - 'en' or 'fr', for the summary.
+ * @param {string} language - 'en', 'fr', 'de' or 'es', for the summary.
  * @returns {object} `{ available, precipitation_expected, minutes_until?,
  * precipitation_type?, intensity?, probability?, summary }`.
  * @example
@@ -47,7 +47,7 @@ function buildPrecipitationOutputs(nowcast, language) {
 /**
  * @description Run the action on a forecast.
  * @param {object} forecast - The slim forecast of the house.
- * @param {string} language - 'en' or 'fr'.
+ * @param {string} language - 'en', 'fr', 'de' or 'es'.
  * @param {number} [now] - The current time in ms.
  * @returns {object} The outputs.
  * @example

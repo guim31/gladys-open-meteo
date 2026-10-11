@@ -155,7 +155,7 @@ test('the widget: content for the house, or a message when unavailable', async (
   assert.match(missing.components[0].text, /^Prévision indisponible/);
 });
 
-test('the test action fetches now and answers in both languages', async () => {
+test('the test action fetches now and answers in every language', async () => {
   const { fake } = setup({ config: { model: 'meteofrance_seamless' } });
   const answer = await fake.action('test_connection');
   assert.equal(

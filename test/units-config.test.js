@@ -41,7 +41,7 @@ test('the configuration falls back to the defaults', () => {
     model: 'icon_seamless',
     language: 'auto',
   });
-  assert.deepEqual(normalizeConfig({ refresh_interval: '5', model: 'arome', language: 'de' }), {
+  assert.deepEqual(normalizeConfig({ refresh_interval: '5', model: 'arome', language: 'it' }), {
     ...DEFAULT_CONFIG,
   });
   assert.equal(refreshMinutes(normalizeConfig({ refresh_interval: '60' })), 60);
@@ -51,6 +51,11 @@ test('texts: language, labels and sentences', () => {
   assert.equal(resolveLanguage('auto', 'fr-FR'), LANGUAGES.FR);
   assert.equal(resolveLanguage('auto', null), LANGUAGES.EN);
   assert.equal(resolveLanguage('en', 'fr'), LANGUAGES.EN);
+  assert.equal(resolveLanguage('auto', 'de-DE'), LANGUAGES.DE);
+  assert.equal(resolveLanguage('es', 'fr'), LANGUAGES.ES);
+  assert.equal(resolveLanguage('auto', 'it'), LANGUAGES.EN);
+  assert.equal(precipitationLabel('snow', 'heavy', 'de'), 'Starker Schneefall');
+  assert.equal(precipitationLabel('freezing_rain', 'light', 'es'), 'Lluvia engelante débil');
   assert.equal(precipitationLabel('snow', 'heavy', 'fr'), 'Neige forte');
   assert.equal(precipitationLabel('freezing_rain', 'light', 'en'), 'Light freezing rain');
   const nowcast = {
@@ -67,6 +72,22 @@ test('texts: language, labels and sentences', () => {
   assert.equal(
     nowcastSentence(nowcast, 'fr'),
     'Pluie modérée attendue dans 23 minutes (probabilité 85 %).',
+  );
+  assert.equal(
+    nowcastSentence(nowcast, 'de'),
+    'Mäßiger Regen in 23 Minuten erwartet (Wahrscheinlichkeit 85 %).',
+  );
+  assert.equal(
+    nowcastSentence(nowcast, 'es'),
+    'Lluvia moderada prevista dentro de 23 minutos (probabilidad del 85 %).',
+  );
+  assert.equal(
+    nowcastSentence({ ...nowcast, minutesUntil: 1, probability: null }, 'de'),
+    'Mäßiger Regen in 1 Minute erwartet.',
+  );
+  assert.equal(
+    nowcastSentence({ ...nowcast, minutesUntil: 0, probability: null }, 'es'),
+    'Lluvia moderada en este momento.',
   );
   assert.equal(
     nowcastSentence({ ...nowcast, minutesUntil: 0, probability: null }, 'en'),

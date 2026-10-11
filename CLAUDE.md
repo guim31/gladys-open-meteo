@@ -76,8 +76,11 @@ scripts/capture-fixture.mjs       records a real response as a fixture (no key n
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish (the
+  languages of the Gladys interface): action messages, manifest texts, the
+  tables of `src/texts.js`; `test/i18n.test.js` checks it. German says "du",
+  Spanish says "usted". The documentation stays `docs/en.md` / `docs/fr.md`
+  (the only languages the store publishes), kept in sync.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 

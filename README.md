@@ -105,7 +105,7 @@ src/scene-triggers.js    "precipitation expected within the hour"
 src/scene-actions.js     "precipitation of the next hour"
 src/widget.js            the 15-minute chart widget
 src/houses.js            the houses of Gladys
-src/units.js, texts.js   conversions, English and French sentences
+src/units.js, texts.js   conversions, the texts in English, French, German, Spanish
 scripts/capture-fixture.mjs   record a real response as a test fixture
 ```
 
