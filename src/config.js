@@ -32,8 +32,9 @@ const MODEL_CHOICES = [
 
 // Language of the texts the integration writes itself (scene variables, the
 // widget when the core sends no language). 'auto' follows the language of
-// the last weather request of the core.
-const LANGUAGE_CHOICES = ['auto', 'en', 'fr'];
+// the last weather request of the core. The others are the languages of the
+// Gladys interface.
+const LANGUAGE_CHOICES = ['auto', 'en', 'fr', 'de', 'es'];
 
 const DEFAULT_CONFIG = Object.freeze({
   refresh_interval: '15',

@@ -31,7 +31,7 @@ const COOLDOWN_MS = 45 * 60 * 1000;
  * probability the model does not give is left out, not sent as 0.
  * @param {object} house - The house.
  * @param {object} nowcast - The nowcast announcing precipitation.
- * @param {string} language - 'en' or 'fr', for the summary.
+ * @param {string} language - 'en', 'fr', 'de' or 'es', for the summary.
  * @returns {object} The event data.
  * @example
  * buildEventData(house, nowcast, 'en');
@@ -55,7 +55,7 @@ function buildEventData(house, nowcast, language) {
  * @param {object} options - Options.
  * @param {Function} options.publish - `(key, data) => Promise`, the SDK
  * publishSceneEvent.
- * @param {Function} options.getLanguage - `() => 'en'|'fr'`.
+ * @param {Function} options.getLanguage - `() => 'en'|'fr'|'de'|'es'`.
  * @param {object} [options.logger] - Logger with info/warn/debug.
  * @param {Function} [options.now] - `() => ms`, for the tests.
  * @returns {object} The watcher ({ observe, forget, reset }).

@@ -10,6 +10,13 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Added
+
+- German and Spanish: the configuration, the scene trigger and action, the
+  widget, the status and test messages and the scene sentences now exist in
+  the four languages of Gladys. The language of the scene texts can be set to
+  German or Spanish.
+
 ## [1.0.1] - 2026-10-10
 
 ### Added

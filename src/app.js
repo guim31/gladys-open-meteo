@@ -28,7 +28,7 @@ import { buildWeather } from './pivot.js';
 import { SCENE_ACTIONS, precipitationNextHour } from './scene-actions.js';
 import { createPrecipitationWatcher } from './scene-triggers.js';
 import { createScheduler } from './scheduler.js';
-import { resolveLanguage } from './texts.js';
+import { MESSAGES, localized, resolveLanguage, template } from './texts.js';
 import { fromMetric } from './units.js';
 import { WIDGETS, buildUnavailableContent, buildWidgetContent } from './widget.js';
 
@@ -47,10 +47,7 @@ function connectionStatus(summary) {
   if (summary !== null && summary.houses === 0) {
     return {
       connected: false,
-      message: {
-        en: 'No house of Gladys has a location: set it in Settings → Houses.',
-        fr: 'Aucune maison de Gladys n’a de position : renseignez-la dans Paramètres → Maisons.',
-      },
+      message: MESSAGES.noLocation,
     };
   }
   const error = summary?.error ?? null;
@@ -60,27 +57,18 @@ function connectionStatus(summary) {
   if (error.kind === ERROR_KINDS.LIMIT) {
     return {
       connected: false,
-      message: {
-        en: 'Open-Meteo request limit reached (it is shared by every application on your Internet connection): retrying later.',
-        fr: 'Limite de requêtes Open-Meteo atteinte (partagée par toutes les applications de votre connexion Internet) : nouvel essai plus tard.',
-      },
+      message: MESSAGES.limitReached,
     };
   }
   if (error.kind === ERROR_KINDS.INVALID || error.kind === ERROR_KINDS.REQUEST) {
     return {
       connected: false,
-      message: {
-        en: 'Open-Meteo has no forecast for your house with this weather model: choose “Automatic” in the configuration.',
-        fr: 'Open-Meteo n’a pas de prévision pour votre maison avec ce modèle météo : choisissez « Automatique » dans la configuration.',
-      },
+      message: MESSAGES.noForecastForModel,
     };
   }
   return {
     connected: false,
-    message: {
-      en: 'Open-Meteo is unreachable for now: retrying in a few minutes.',
-      fr: 'Open-Meteo est injoignable pour le moment : nouvel essai dans quelques minutes.',
-    },
+    message: MESSAGES.unreachable,
   };
 }
 
@@ -240,11 +228,7 @@ function createApp(
         });
       } catch (err) {
         logger.warn(`Widget content unavailable: ${err.message}`);
-        return buildUnavailableContent(
-          lang === 'fr'
-            ? `Prévision indisponible : ${err.message}`
-            : `Forecast unavailable: ${err.message}`,
-        );
+        return buildUnavailableContent(template('forecastUnavailable', lang)(err.message));
       }
     },
   );
@@ -263,10 +247,14 @@ function createApp(
     if (lastSummary?.error) {
       scheduler.requestCycle();
     }
-    return {
-      en: `It works: ${us} °F (${metric} °C) now at ${house.name}${where}${model ? `, model ${model}` : ''}. Refreshing every ${minutes} min.`,
-      fr: `Ça fonctionne : ${metric} °C en ce moment à ${house.name}${where}${model ? `, modèle ${model}` : ''}. Mise à jour toutes les ${minutes} min.`,
-    };
+    return localized('testSucceeded', {
+      us,
+      metric,
+      house: house.name,
+      where,
+      model,
+      minutes,
+    });
   });
 
   // --- Configuration ---------------------------------------------------------

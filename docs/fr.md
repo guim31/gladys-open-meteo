@@ -72,7 +72,8 @@ le fournisseur dans les réglages du widget météo.
   Automatique.
 - **Langue des textes de scène** — la langue des phrases que l'intégration
   écrit dans les variables de scène (« Pluie modérée attendue dans 23 minutes
-  (probabilité 85 %). »). **Automatique** suit la langue de votre Gladys.
+  (probabilité 85 %). ») : anglais, français, allemand ou espagnol.
+  **Automatique** suit la langue de votre Gladys.
 
 ## Fréquence de mise à jour de la météo
 
