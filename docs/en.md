@@ -150,8 +150,10 @@ on _Precipitation expected_ to decide what comes next. It costs no call.
   check its Internet access. The integration retries every 5 minutes.
 - **The dashboard still shows another provider** — open the settings of the
   weather widget and choose Open-Meteo.
-- **Logs**: the **Logs** tab of the integration shows each refresh ("Refreshed
-  1 location(s) of 1 house(s); next refresh in 15 min").
+- **Logs**: the **Logs** tab of the integration stays quiet while all is
+  well. An Open-Meteo failure appears once when it starts ("Open-Meteo request
+  failed: …") and once when it ends ("Open-Meteo answers again"), not on
+  every refresh. The detail of each refresh is logged at the debug level.
 
 ## Privacy
 

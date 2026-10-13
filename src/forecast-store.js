@@ -21,6 +21,7 @@
 
 import { ERROR_KINDS, OpenMeteoError, fetchForecast } from './api.js';
 import { parseForecast } from './forecast.js';
+import { createIssueLog } from './issue-log.js';
 
 // Two requests closer than this (~110 m) are the same location.
 const COORDINATE_DECIMALS = 3;
@@ -79,6 +80,8 @@ function createForecastStore({
   const entries = new Map();
   // key -> Promise of the call under way
   const inflight = new Map();
+  // A failing location is logged once when it fails, once when it recovers.
+  const issues = createIssueLog(logger);
   // { kind, message, at } of the last failed call, null after a success.
   let lastError = null;
   let blockedUntil = 0;
@@ -137,10 +140,12 @@ function createForecastStore({
           entries.set(key, entry);
         }
         lastError = null;
+        issues.recover(key, 'Open-Meteo answers again');
         return entry;
       } catch (err) {
         const kind = err.kind ?? ERROR_KINDS.NETWORK;
         lastError = { kind, message: err.message, at: now() };
+        issues.fail(key, kind, `Open-Meteo request failed: ${err.message}`);
         if (kind === ERROR_KINDS.LIMIT && err.status === 429) {
           blockedUntil = now() + limitRetryMs(err.reason);
         }
@@ -198,7 +203,9 @@ function createForecastStore({
       return { ...(await refresh(latitude, longitude)), stale: false };
     } catch (err) {
       if (cached !== null && now() - cached.fetchedAt <= STALE_MAX_MS) {
-        logger.warn(`Serving a forecast cached ${ageMinutes(cached)} min ago: ${err.message}`);
+        // The failure itself is logged once by refresh(): one line per request
+        // here would repeat it for every dashboard view.
+        logger.debug(`Serving a forecast cached ${ageMinutes(cached)} min ago: ${err.message}`);
         return { ...cached, stale: true };
       }
       throw err;
@@ -218,6 +225,7 @@ function createForecastStore({
         entries.delete(key);
       }
     }
+    issues.retain((key) => keep.has(key) || entries.has(key));
   }
 
   /**
@@ -228,6 +236,7 @@ function createForecastStore({
   function reset() {
     entries.clear();
     lastError = null;
+    issues.retain(() => false);
   }
 
   return {

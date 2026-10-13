@@ -37,6 +37,7 @@ src/api.js                        the one Open-Meteo request (variables, units),
 src/forecast.js                   response columns → slim metric rows (unixtime or ISO + offset)
 src/forecast-store.js             cache per location, shared calls, stale fallback, 429 block
 src/scheduler.js                  the refresh timer (one call per location per cycle)
+src/issue-log.js                  a repeated failure logged once when it starts, once when it ends
 src/pivot.js                      slim forecast → pivot weather of the core, in the asked units
 src/conditions.js                 WMO codes → Gladys conditions, day/night
 src/nowcast.js                    the next hour from `minutely_15`
@@ -189,8 +190,17 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
   `requestWeatherRefresh()` (qui ne sert qu'au déclencheur d'alertes du cœur).
 - `requestWeatherRefresh()` et `requestWidgetRefresh()` sont **synchrones** (fire-and-forget),
   le second lève une exception sur une clé de widget mal formée.
-- Le SDK 0.14 publié n'a **pas** l'export `@gladysassistant/integration-sdk/testing` que décrit
-  le README de `master` : faux client maison dans `test/helpers/`.
+- Le SDK 0.15 a l'export `@gladysassistant/integration-sdk/testing` (faux Gladys), absent de la
+  0.14 : le faux client maison de `test/helpers/` est gardé (petit, il vérifie les règles des
+  événements de scène et enregistre un éventuel `onPoll`).
+- **Polling (GladysAssistant/Gladys#3198)** : non concerné. Une intégration météo n'a aucun
+  appareil ; les rafraîchissements tournent sur le minuteur du conteneur (`src/scheduler.js`),
+  jamais sur `onPoll` du cœur (qui ne sonde que les appareils créés avec `should_poll: true`).
+  `test/logs.test.js` le fige : ne pas introduire d'appareil sondé par le cœur.
+- **Logs** : rien en info par cycle, par requête `onWeatherGet`, par widget ou action de scène
+  (debug). Une panne qui se répète (Open-Meteo, maisons de Gladys) passe par `src/issue-log.js` :
+  une ligne `warn` au début, une `info` au retour. Pas de coordonnées dans les logs (les
+  utilisateurs les collent sur le forum). `test/logs.test.js` le vérifie.
 - `source: "houses"` (sélecteur de maison) n'existe que sur `master` du cœur, dans aucune version
   publiée jusqu'à 5.1.4 : désigner la maison par un champ `string` (son nom). `getHouses()` exige
   `location: true` ; une intégration météo n'en a besoin que pour surveiller elle-même la
