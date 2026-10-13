@@ -165,8 +165,11 @@ décider de la suite. Elle ne coûte aucun appel.
   toutes les 5 minutes.
 - **Le tableau de bord affiche toujours un autre fournisseur** — ouvrez les
   réglages du widget météo et choisissez Open-Meteo.
-- **Logs** : l'onglet **Logs** de l'intégration montre chaque mise à jour
-  (« Refreshed 1 location(s) of 1 house(s); next refresh in 15 min »).
+- **Logs** : l'onglet **Logs** de l'intégration reste calme quand tout va
+  bien. Une panne d'Open-Meteo y apparaît une fois quand elle commence
+  (« Open-Meteo request failed: … ») et une fois quand elle se termine
+  (« Open-Meteo answers again »), pas à chaque mise à jour. Le détail de chaque
+  mise à jour est écrit au niveau debug.
 
 ## Vie privée
 

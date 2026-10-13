@@ -4,9 +4,10 @@
 // It records the handlers the integration registers and everything it sends
 // to Gladys (connection statuses, scene events, refresh nudges, discovered
 // devices), and lets a test play Gladys' side: call a handler, emit
-// 'connected', change the houses or the configuration. The SDK 0.14 ships no
-// testing export, hence this file; it mirrors the argument checks that matter
-// (the scene event data rules of the core).
+// 'connected', change the houses or the configuration. Kept rather than the
+// SDK 0.15 `testing` export: it is small, it mirrors the argument checks that
+// matter here (the scene event data rules of the core), and it records the
+// device-side registrations (onPoll) a weather integration must never make.
 // -----------------------------------------------------------------------------
 
 import { EventEmitter } from 'node:events';
@@ -31,6 +32,7 @@ function createFakeGladys({ config = {}, houses = [] } = {}) {
     widgetGet: new Map(),
     configUpdated: null,
     scanRequest: null,
+    poll: null,
   };
   const fake = {
     config: { ...config },
@@ -59,6 +61,9 @@ function createFakeGladys({ config = {}, houses = [] } = {}) {
     },
     onScanRequest: (callback) => {
       handlers.scanRequest = callback;
+    },
+    onPoll: (callback) => {
+      handlers.poll = callback;
     },
     async getConfig() {
       return { ...fake.config };

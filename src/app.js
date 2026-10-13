@@ -138,7 +138,7 @@ function createApp(
     onCycle: async (summary) => {
       lastSummary = summary;
       watcher.forget(new Set(houses.list().map((house) => house.id)));
-      logger.info(
+      logger.debug(
         `Refreshed ${summary.refreshed} location(s) of ${summary.houses} house(s); next refresh in ${Math.round(summary.delayMs / 60000)} min`,
       );
       if (summary.refreshed > 0) {
@@ -227,7 +227,8 @@ function createApp(
           now: now(),
         });
       } catch (err) {
-        logger.warn(`Widget content unavailable: ${err.message}`);
+        // Shown in the widget; an Open-Meteo failure is logged once by the store.
+        logger.debug(`Widget content unavailable: ${err.message}`);
         return buildUnavailableContent(template('forecastUnavailable', lang)(err.message));
       }
     },

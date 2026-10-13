@@ -10,6 +10,14 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Changed
+
+- Quieter logs: a normal refresh writes nothing at the info level any more
+  (the cycle summary moves to debug), and an Open-Meteo or Gladys failure that
+  repeats on every refresh is logged once when it starts and once when it
+  ends, instead of on every attempt and every dashboard view.
+- Integration SDK 0.15.
+
 ## [1.1.0] - 2026-10-11
 
 ### Added

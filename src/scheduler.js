@@ -113,7 +113,8 @@ function createScheduler({
         } catch (err) {
           failed += 1;
           error = err;
-          logger.warn(`Refresh failed for "${group[0].name}": ${err.message}`);
+          // The store logs the failure once, and its end: debug here.
+          logger.debug(`Refresh failed for "${group[0].name}": ${err.message}`);
           if (err.kind === ERROR_KINDS.LIMIT) {
             break;
           }
