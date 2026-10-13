@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-13
+
 ### Changed
 
 - Quieter logs: a normal refresh writes nothing at the info level any more
@@ -50,6 +52,7 @@ the notes of the version's GitHub Release.
 - Documentation in English and French, with the Open-Meteo attribution (CC BY
   4.0).
 
-[Unreleased]: https://github.com/guim31/gladys-open-meteo/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/guim31/gladys-open-meteo/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/guim31/gladys-open-meteo/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/guim31/gladys-open-meteo/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/guim31/gladys-open-meteo/releases/tag/v1.0.1
